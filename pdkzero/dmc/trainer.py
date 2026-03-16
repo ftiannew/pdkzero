@@ -31,9 +31,12 @@ def train_step(
     z = batch["z"].to(device)
     target = batch["target"].to(device)
 
+    # 模型预测：这个动作能得多少分
     predicted_scores = model(z, x)
+    # 计算 loss：预测分数 vs 实际分数
     value_loss = torch.nn.functional.mse_loss(predicted_scores, target)
     loss = value_loss
+    # 反向传播更新模型
     loss.backward()
     optimizer.step()
     return {

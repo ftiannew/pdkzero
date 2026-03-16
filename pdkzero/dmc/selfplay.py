@@ -82,7 +82,9 @@ def generate_episode(
 
     model.eval()
     while True:
+        # 1. 模型选择动作
         action_index = _select_action_index(model, obs, rng, epsilon, device)
+        # 2. 保存局面和选择的动作
         samples.append(
             EpisodeSample(
                 player=int(obs["position"]),
@@ -92,10 +94,13 @@ def generate_episode(
                 chosen_index=action_index,
             )
         )
+        # 3. 执行动作
         next_obs, _, done, info = env.step(obs["legal_actions"][action_index])
         if done:
+            # 4. 游戏结束，得到最终分数
             scores = info["scores"]
             for sample in samples:
+                # 用最终分数作为 target！
                 sample.mc_return = float(scores[sample.player])
                 sample.target = sample.mc_return
                 sample.win_target = 1.0 if scores[sample.player] > 0 else 0.0
@@ -114,13 +119,16 @@ def _select_action_index(
     num_actions = len(obs["legal_actions"])
     if num_actions == 1:
         return 0
+    # epsilon-greedy 探索
     if rng.random() < epsilon:
         return rng.randrange(num_actions)
 
+    # 模型对所有候选动作打分
     with torch.no_grad():
         x_batch = torch.tensor(obs["x_batch"], dtype=torch.float32, device=device)
         z_batch = torch.tensor(obs["z_batch"], dtype=torch.float32, device=device)
         scores = model(z_batch, x_batch)
+    # 选择分数最高的动作
     return int(torch.argmax(scores).item())
 
 
