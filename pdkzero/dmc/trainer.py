@@ -33,12 +33,10 @@ def train_step(
 
     predicted_scores = model(z, x)
     value_loss = torch.nn.functional.mse_loss(predicted_scores, target)
-    policy_loss = value_loss.detach() * 0.0
     loss = value_loss
     loss.backward()
     optimizer.step()
     return {
         "loss": float(loss.detach().cpu().item()),
-        "policy_loss": float(policy_loss.detach().cpu().item()),
         "value_loss": float(value_loss.detach().cpu().item()),
     }

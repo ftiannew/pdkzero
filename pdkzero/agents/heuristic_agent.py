@@ -13,11 +13,12 @@ class HeuristicAgent:
         if not playable:
             return infoset.legal_actions[0]
 
-        next_player = (infoset.current_player + 1) % 4
-        if infoset.cards_left[next_player] == 1:
-            single_actions = [action for action in playable if action.move_type is MoveType.SINGLE]
-            if single_actions:
-                return max(single_actions, key=lambda action: action.primary_value)
+        for opponent_offset in (1, 2, 3):
+            opponent = (infoset.current_player + opponent_offset) % 4
+            if infoset.cards_left[opponent] == 1:
+                single_actions = [action for action in playable if action.move_type is MoveType.SINGLE]
+                if single_actions:
+                    return max(single_actions, key=lambda action: action.primary_value)
 
         def action_key(action: Move) -> tuple[int, int, int]:
             bomb_bias = 1 if action.move_type is MoveType.BOMB else 0

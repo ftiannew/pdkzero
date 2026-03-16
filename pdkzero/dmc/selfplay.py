@@ -37,7 +37,7 @@ class EpisodeSample:
         if self.candidates is None and self.x is not None:
             chosen_candidate = np.array(self.x[-ACTION_VECTOR_DIM :], copy=True)
             self.candidates = chosen_candidate[None, :]
-        if self.target and self.mc_return == 0.0:
+        if self.target != 0.0 and self.mc_return == 0.0:
             self.mc_return = float(self.target)
         if self.x is None and self.state is not None and self.candidates is not None:
             self.x = np.concatenate((self.state, self.candidates[self.chosen_index]), axis=0)
