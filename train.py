@@ -280,6 +280,7 @@ def main(argv: Sequence[str] | None = None) -> dict:
                         ),
                         games=args.num_eval_games,
                         seed=evaluation_seed,
+                        verbose=args.eval_verbose,
                     )
                     eval_scores = average_scores(evaluation_rows)
                     eval_score = float(eval_scores.get(0, 0.0))
@@ -308,6 +309,7 @@ def main(argv: Sequence[str] | None = None) -> dict:
         agents=(DeepAgent(actor_model, device="cpu"), HeuristicAgent(), HeuristicAgent(), HeuristicAgent()),
         games=args.num_eval_games,
         seed=evaluation_seed,
+        verbose=args.eval_verbose,
     )
     result = {
         "episodes": episodes_completed,

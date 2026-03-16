@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run evaluation every N completed episodes; 0 disables periodic evaluation",
     )
     parser.add_argument("--num-eval-games", type=int, default=8, help="Evaluation games after training")
+    parser.add_argument("--eval-verbose", action="store_true", help="Print moves during evaluation")
     return parser
 
 

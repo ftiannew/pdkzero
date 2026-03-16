@@ -13,6 +13,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Evaluate a simple heuristic-vs-random Paodekuai table")
     parser.add_argument("--games", type=int, default=8, help="Number of games to evaluate")
     parser.add_argument("--seed", type=int, default=None, help="Optional random seed for reproducibility")
+    parser.add_argument("--verbose", action="store_true", help="Print each move during evaluation")
     return parser
 
 
@@ -29,7 +30,7 @@ def main(argv: Sequence[str] | None = None) -> dict:
         RandomAgent(seed=agent_seeds[1]),
         RandomAgent(seed=agent_seeds[2]),
     )
-    score_rows = play_many_games(agents=agents, games=args.games, seed=args.seed)
+    score_rows = play_many_games(agents=agents, games=args.games, seed=args.seed, verbose=args.verbose)
     result = {
         "games": args.games,
         "average_scores": average_scores(score_rows),
