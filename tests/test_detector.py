@@ -40,7 +40,7 @@ def test_detect_straight():
 
 
 def test_detect_straight_with_2():
-    cards = parse_cards("H3 D4 C5 H14 D15")
+    cards = parse_cards("H3 D4 C5 HA D2")
     move = detect_move(cards)
     assert move.move_type == MoveType.STRAIGHT
     assert move.primary_value == 5
@@ -54,7 +54,7 @@ def test_detect_serial_pair():
 
 
 def test_detect_serial_pair_aa22():
-    cards = parse_cards("H14 D14 H15 D15")
+    cards = parse_cards("HA DA H2 D2")
     move = detect_move(cards)
     assert move.move_type == MoveType.SERIAL_PAIR
     assert move.primary_value == SPECIAL_SERIAL_PAIR_AA22_VALUE
@@ -110,6 +110,7 @@ def test_detect_four_with_kickers():
     move = detect_move(cards)
     assert move.move_type == MoveType.FOUR_WITH_KICKERS
     assert move.primary_value == 3
+    assert move.length == 6
 
 
 def test_3333_must_be_four_with_one():
@@ -151,7 +152,7 @@ def test_bomb_vs_bomb():
 
 
 def test_triple_with_pair_beats_triple_with_two():
-    lead = detect_move(parse_cards("H3 D3 C3 D5 H7"))
+    lead = detect_move(parse_cards("H3 D3 C3 H5 D7"))
     follow = detect_move(parse_cards("H4 D4 C4 H5 D5"))
     assert can_beat(follow, lead) is True
 
