@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from random import Random
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,18 @@ if TYPE_CHECKING:
 
 Agent = Any
 
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
+SUIT_COLORS = {
+    "H": RED,
+    "D": RED,
+    "S": BLUE,
+    "C": BLUE,
+}
 SUIT_SYMBOLS = {"S": "♠", "H": "♥", "D": "♦", "C": "♣"}
 RANK_SYMBOLS = {3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "T", 11: "J", 12: "Q", 13: "K", 14: "A", 15: "2"}
 
@@ -21,23 +34,24 @@ def get_agent_name(agent: Agent) -> str:
     if name == "DeepAgent":
         return "DeepAgent"
     if name == "HeuristicAgent":
-        return "Heuristic  "
+        return "Heuristic "
     if name == "RandomAgent":
-        return "Random     "
+        return "Random    "
     return name
 
 
 def format_card(card) -> str:
+    color = SUIT_COLORS.get(card.suit, "")
     suit = SUIT_SYMBOLS.get(card.suit, card.suit)
     rank = RANK_SYMBOLS.get(card.rank, str(card.rank))
-    return f"{suit}{rank}"
+    return f"{color}{suit}{rank}{RESET}"
 
 
 def format_hand(cards) -> str:
     return " ".join(format_card(c) for c in cards)
 
 
-def play_game(agents: tuple[Agent, ...], seed: int | None = None, verbose: bool = False) -> dict[int, int]:
+def play_game(agents: tuple[Agent, ...], seed: int | None = None, verbose: bool = False, show_colors: bool = True) -> dict[int, int]:
     engine = GameEngine.deal() if seed is None else GameEngine.deal(Random(seed))
     while not engine.is_game_over:
         infoset = engine.infoset()
