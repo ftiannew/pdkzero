@@ -1,20 +1,52 @@
 from __future__ import annotations
 
 from random import Random
+from typing import TYPE_CHECKING, Any
 
 from pdkzero.agents.heuristic_agent import HeuristicAgent
 from pdkzero.game.engine import GameEngine
 
+if TYPE_CHECKING:
+    from pdkzero.agents.deep_agent import DeepAgent
+    from pdkzero.agents.random_agent import RandomAgent
 
-def play_game(agents: tuple, seed: int | None = None, verbose: bool = False) -> dict[int, int]:
+Agent = Any
+
+SUIT_SYMBOLS = {"S": "♠", "H": "♥", "D": "♦", "C": "♣"}
+RANK_SYMBOLS = {3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "T", 11: "J", 12: "Q", 13: "K", 14: "A", 15: "2"}
+
+
+def get_agent_name(agent: Agent) -> str:
+    name = type(agent).__name__
+    if name == "DeepAgent":
+        return "DeepAgent"
+    if name == "HeuristicAgent":
+        return "Heuristic  "
+    if name == "RandomAgent":
+        return "Random     "
+    return name
+
+
+def format_card(card) -> str:
+    suit = SUIT_SYMBOLS.get(card.suit, card.suit)
+    rank = RANK_SYMBOLS.get(card.rank, str(card.rank))
+    return f"{suit}{rank}"
+
+
+def format_hand(cards) -> str:
+    return " ".join(format_card(c) for c in cards)
+
+
+def play_game(agents: tuple[Agent, ...], seed: int | None = None, verbose: bool = False) -> dict[int, int]:
     engine = GameEngine.deal() if seed is None else GameEngine.deal(Random(seed))
     while not engine.is_game_over:
         infoset = engine.infoset()
         action = agents[engine.current_player].act(infoset)
         if verbose:
-            hand_str = " ".join(c.label for c in infoset.hand_cards)
-            move_str = " ".join(c.label for c in action.cards) if action.cards else "PASS"
-            print(f"[P{engine.current_player}] {move_str:20} | Hand: {hand_str}")
+            agent_name = get_agent_name(agents[engine.current_player])
+            move_str = format_hand(action.cards) if action.cards else "PASS"
+            hand_str = format_hand(infoset.hand_cards)
+            print(f"[P{engine.current_player}]{agent_name} {move_str:20} | Hand: {hand_str}")
         engine.play(action)
     assert engine.scores is not None
     if verbose:
@@ -22,7 +54,7 @@ def play_game(agents: tuple, seed: int | None = None, verbose: bool = False) -> 
     return engine.scores
 
 
-def play_many_games(agents: tuple, games: int, seed: int | None = None, verbose: bool = False) -> list[dict[int, int]]:
+def play_many_games(agents: tuple[Agent, ...], games: int, seed: int | None = None, verbose: bool = False) -> list[dict[int, int]]:
     if seed is None:
         return [play_game(agents=agents, seed=None, verbose=verbose) for _ in range(games)]
     return [play_game(agents=agents, seed=seed + game, verbose=verbose) for game in range(games)]
