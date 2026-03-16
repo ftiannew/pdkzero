@@ -27,6 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--verbose", action="store_true", help="Print each move during evaluation")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint (auto-detect latest if not specified)")
     parser.add_argument("--device", default="cpu", help="Device to run model on")
+    parser.add_argument("--deep-agents", type=int, default=4, help="Number of DeepAgents (0-4), default 4 (all AI)")
     return parser
 
 
@@ -48,21 +49,24 @@ def main(argv: Sequence[str] | None = None) -> dict:
             history_hidden_dim=checkpoint.get("history_hidden_dim", 64),
         )
         model.load_state_dict(checkpoint["state_dict"])
-        p0_agent = DeepAgent(model, device=args.device)
     else:
-        print("[eval] No checkpoint found, using HeuristicAgent for player 0")
-        p0_agent = HeuristicAgent()
+        print("[eval] No checkpoint found, using HeuristicAgent")
+        model = None
 
-    agents = (
-        p0_agent,
-        HeuristicAgent(),
-        HeuristicAgent(),
-        HeuristicAgent(),
-    )
+    num_deep = args.deep_agents
+    agents = []
+    for i in range(4):
+        if model is not None and i < num_deep:
+            agents.append(DeepAgent(model, device=args.device))
+        else:
+            agents.append(HeuristicAgent())
+
+    agents = tuple(agents)
     score_rows = play_many_games(agents=agents, games=args.games, seed=args.seed, verbose=args.verbose)
     result = {
         "games": args.games,
         "checkpoint": str(checkpoint_path) if checkpoint_path else None,
+        "deep_agents": num_deep,
         "average_scores": average_scores(score_rows),
         "scores": score_rows,
     }
