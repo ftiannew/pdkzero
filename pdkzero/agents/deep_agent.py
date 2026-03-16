@@ -18,7 +18,7 @@ class DeepAgent:
         device: str = "cpu",
         seed: int | None = None,
     ) -> None:
-        self.model = model
+        self.model = model.to(device)
         self.epsilon = epsilon
         self.device = device
         self._rng = Random(seed)
