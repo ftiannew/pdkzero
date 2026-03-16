@@ -81,7 +81,9 @@ def resolve_auto_resume(args) -> str | None:
     checkpoint_dir = Path(args.checkpoint_dir)
     latest = find_latest_checkpoint(checkpoint_dir)
     if latest is not None:
-        print(f"[train] Auto-resuming from {latest}")
+        ckpt = torch.load(latest, map_location="cpu")
+        episodes = ckpt.get("episodes_completed", 0)
+        print(f"[train] Auto-resuming from {latest} (episode {episodes})")
         return str(latest)
     return None
 
