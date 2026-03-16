@@ -120,11 +120,12 @@ def _generate_triple_with_single(grouped: dict[int, list[Card]]) -> list[Move]:
     for triple_rank, cards in grouped.items():
         if len(cards) < 3:
             continue
-        triple_cards = cards[:3]
-        for kicker_rank, kicker_cards in grouped.items():
-            if kicker_rank == triple_rank:
-                continue
-            moves.append(detect_move(tuple(triple_cards + kicker_cards[:1])))
+        for triple_cards in combinations(cards, 3):
+            for kicker_rank, kicker_cards in grouped.items():
+                if kicker_rank == triple_rank:
+                    continue
+                for kicker in kicker_cards:
+                    moves.append(detect_move(tuple(triple_cards + (kicker,))))
     return moves
 
 
@@ -134,11 +135,13 @@ def _generate_triple_with_two_singles(grouped: dict[int, list[Card]]) -> list[Mo
     for triple_rank, cards in grouped.items():
         if len(cards) < 3:
             continue
-        triple_cards = cards[:3]
-        kicker_ranks = [rank for rank in ranks if rank != triple_rank]
-        for left_rank, right_rank in combinations(kicker_ranks, 2):
-            kickers = grouped[left_rank][:1] + grouped[right_rank][:1]
-            moves.append(detect_move(tuple(triple_cards + kickers)))
+        for triple_cards in combinations(cards, 3):
+            kicker_ranks = [rank for rank in ranks if rank != triple_rank]
+            for left_rank, right_rank in combinations(kicker_ranks, 2):
+                for left_kicker in grouped[left_rank]:
+                    for right_kicker in grouped[right_rank]:
+                        kickers = (left_kicker, right_kicker)
+                        moves.append(detect_move(tuple(triple_cards + kickers)))
     return moves
 
 
