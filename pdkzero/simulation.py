@@ -53,14 +53,16 @@ def format_hand(cards) -> str:
 
 def play_game(agents: tuple[Agent, ...], seed: int | None = None, verbose: bool = False, show_colors: bool = True) -> dict[int, int]:
     engine = GameEngine.deal() if seed is None else GameEngine.deal(Random(seed))
+    step = 0
     while not engine.is_game_over:
         infoset = engine.infoset()
         action = agents[engine.current_player].act(infoset)
         if verbose:
+            step += 1
             agent_name = get_agent_name(agents[engine.current_player])
             move_str = format_hand(action.cards) if action.cards else "PASS"
             hand_str = format_hand(infoset.hand_cards)
-            print(f"[P{engine.current_player}]{agent_name} {move_str:20} | Hand: {hand_str}")
+            print(f"[{step:02d}] [P{engine.current_player}]{agent_name} {move_str:20} | Hand: {hand_str}")
         engine.play(action)
     assert engine.scores is not None
     if verbose:
