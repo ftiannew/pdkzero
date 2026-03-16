@@ -26,7 +26,7 @@ ENCODED_MOVE_TYPES = (
 )
 MOVE_TYPE_INDEX = {move_type: index for index, move_type in enumerate(ENCODED_MOVE_TYPES)}
 ACTION_VECTOR_DIM = len(RANKS) + len(ENCODED_MOVE_TYPES) + 5
-STATE_VECTOR_DIM = len(RANKS) + len(RANKS) * 3 + 3 + ACTION_VECTOR_DIM + 4
+STATE_VECTOR_DIM = len(RANKS) + len(RANKS) * 3 + 3 + ACTION_VECTOR_DIM + 4 + len(RANKS) * 3
 HISTORY_LENGTH = 8
 
 
@@ -77,6 +77,9 @@ def encode_state(infoset: InfoSet) -> np.ndarray:
     encoded[offset + 1] = 1.0 if infoset.lead_move is not None else 0.0
     encoded[offset + 2] = 1.0 if infoset.cards_left[(player + 1) % 4] == 1 else 0.0
     encoded[offset + 3] = 1.0 if infoset.cards_left[(player - 1) % 4] == 1 else 0.0
+    offset += 4
+
+    _encode_inferred_opponent_cards(encoded, offset, infoset)
     return encoded
 
 
@@ -107,10 +110,40 @@ def encode_move(move: Move | None) -> np.ndarray:
     return encoded
 
 
-def encode_cards(cards: tuple[Card, ...] | list[Card]) -> np.ndarray:
-    encoded = np.zeros(len(RANKS), dtype=np.float32)
-    _encode_cards_into(encoded, cards)
-    return encoded
+from pdkzero.game.cards import Card
+
+
+def _encode_inferred_opponent_cards(encoded: np.ndarray, offset: int, infoset: InfoSet) -> None:
+    """
+    推断对手可能持有的牌
+    基于：已知的牌（自己手牌 + 对手打出的牌）+ 对手剩余牌数
+    """
+    from collections import Counter
+
+    player = infoset.player_index
+    all_ranks = tuple(range(3, 16))
+
+    my_hand_ranks = Counter(card.rank for card in infoset.hand_cards)
+    played_ranks = Counter()
+    for p in range(4):
+        if p != player:
+            played_ranks.update(card.rank for card in infoset.played_cards[p])
+
+    unknown_ranks = Counter()
+    for rank in all_ranks:
+        total_in_deck = 4
+        known = my_hand_ranks.get(rank, 0) + played_ranks.get(rank, 0)
+        unknown_ranks[rank] = total_in_deck - known
+
+    total_unknown = sum(unknown_ranks.values())
+    if total_unknown == 0:
+        return
+
+    for relative_idx, relative_player in enumerate((1, 2, 3)):
+        opp_cards_left = infoset.cards_left[(player + relative_player) % 4]
+        for rank_idx, rank in enumerate(all_ranks):
+            prob = unknown_ranks.get(rank, 0) / total_unknown
+            encoded[offset + relative_idx * len(all_ranks) + rank_idx] = prob * opp_cards_left / 13.0
 
 
 def _encode_cards_into(target: np.ndarray, cards: tuple[Card, ...] | list[Card]) -> None:
