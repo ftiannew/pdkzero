@@ -9,7 +9,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=None, help="Optional random seed for reproducibility")
     parser.add_argument("--max-episodes", type=int, default=32, help="Number of self-play episodes")
     parser.add_argument("--batch-size", type=int, default=32, help="Training batch size")
-    parser.add_argument("--num-workers", type=int, default=4, help="Parallel self-play worker count")
+    parser.add_argument("--num-workers", type=int, default=1, help="Parallel self-play worker count")
     parser.add_argument(
         "--log-interval",
         type=int,
@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--save-interval-updates",
         type=int,
-        default=500,
+        default=5000,
         help="Write a step checkpoint every N optimizer updates",
     )
     parser.add_argument(

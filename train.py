@@ -68,6 +68,24 @@ def load_checkpoint(path: str | Path | None) -> dict | None:
     return torch.load(Path(path), map_location="cpu")
 
 
+def find_latest_checkpoint(checkpoint_dir: Path) -> Path | None:
+    if not checkpoint_dir.exists():
+        return None
+    checkpoints = sorted(checkpoint_dir.glob("step-*.pt"), key=lambda p: int(p.stem.split("-")[1]))
+    return checkpoints[-1] if checkpoints else None
+
+
+def resolve_auto_resume(args) -> str | None:
+    if args.resume_from is not None:
+        return args.resume_from
+    checkpoint_dir = Path(args.checkpoint_dir)
+    latest = find_latest_checkpoint(checkpoint_dir)
+    if latest is not None:
+        print(f"[train] Auto-resuming from {latest}")
+        return str(latest)
+    return None
+
+
 def resolve_model_dims(args, checkpoint: dict | None) -> tuple[int, int, int, int]:
     if checkpoint is None:
         return STATE_VECTOR_DIM, ACTION_VECTOR_DIM, args.hidden_dim, args.history_hidden_dim
@@ -118,6 +136,7 @@ def main(argv: Sequence[str] | None = None) -> dict:
         raise ValueError("--replay-capacity must be >= 1")
     rng = Random(args.seed)
     device = resolve_device(args.device)
+    args.resume_from = resolve_auto_resume(args)
     checkpoint = load_checkpoint(args.resume_from)
     state_dim, action_dim, hidden_dim, history_hidden_dim = resolve_model_dims(args, checkpoint)
 
